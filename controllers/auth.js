@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const ErrorResponse = require('../auxiliary/errorResponse');
 
 
 exports.register = async (req, res, next) => {
@@ -9,15 +10,10 @@ exports.register = async (req, res, next) => {
             username, email, password
         });
 
-        res.status(201).json({
-            status: true,
-            user: user
-        });
+        sendToken(user, 201, res);
+        
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message
-        })
+        next(error);
     }
 };
 
@@ -26,7 +22,7 @@ exports.login = async (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ success: false, error: "Please provide email and password."});
+        return next(new ErrorResponse("Please provide email and password.", 400));
     }
 
     try {
@@ -34,27 +30,22 @@ exports.login = async (req, res, next) => {
 
         // if we don't get user back
         if (!user) {
-            return res.status(400).json({ success: fasle, error: 'Invalid credentials.' });
+            return next(new ErrorResponse('Invalid credentials.', 401));
         };
 
         // check password match
         const isMatch = await user.matchPasswords(password);
         // if don't match
         if (!isMatch) {
-            return res.status(404).json({ success: false, error: 'Invalid credentials.' });
+            return next(new ErrorResponse('Invalid credentials.', 401));
         };
 
         // if match
-        res.status(200).json({
-            status: true,
-            token: 'aklwuhdakiuwhdui21uhu3hiubi1uhreuh'
-        });
+        sendToken(user, 200, res);
+        
 
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message
-        })
+        next(error);
     }
 };
 
@@ -65,3 +56,9 @@ exports.forgotpassword = (req, res, next) => {
 exports.resetpassword = (req, res, next) => {
     res.send('Rest Password Route');
 };
+
+
+const sendToken = (user, statusCode, res) => {
+    const token = user.getSignedToken();
+    res.status(statusCode).json({ success: true, token });
+}
