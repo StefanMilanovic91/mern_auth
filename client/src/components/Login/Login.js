@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link, useHistory } from 'react-router-dom';
+import {  useHistory } from 'react-router-dom';
 import './login.css';
 
 const Login = () => {
 
-    const [inputs, setInputs] = useState({ username: '', email: '', password: '' });
+    const [inputs, setInputs] = useState({ email: '', password: '' });
     const [error, setError] = useState(null);
     const history = useHistory();
 
@@ -27,9 +27,9 @@ const Login = () => {
         const body = { ...inputs };
 
         try {
-            const data = await axios.post('/api/auth/register', body, config);
-
-            localStorage.setItem('authToken', data.token);
+            const data = await axios.post('/api/auth/login', body, config);
+            
+            localStorage.setItem('authToken', data.data.token);
             history.push('/');
         } catch (error) {
             setError(error.response.data.error);
